@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import  {useDispatch, useSelector} from 'react-redux';
+import { signInFailure,signInStart, signInSuccess } from '../redux/userSlice';
 export default function SignIn() {
   const [loginData, setLoginData] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [err, setError] = useState(null);
+const {loading,error}=useSelector((state)=>state.user);
   const navigate = useNavigate();
-
+const dispatch=useDispatch();
   const handleLogin = (e) => {
     setLoginData({ ...loginData, [e.target.id]: e.target.value });
   };
 
   const submitData = async (e) => {
     e.preventDefault();
-    setLoading(true);
+      dispatch(signInStart());
 
     try {
       const res = await fetch("/api/auth/signin", {
@@ -27,20 +27,16 @@ export default function SignIn() {
       const data = await res.json();
 
       if (data.statusCode === 401||data.statusCode === 404) {
-        console.log(data);
-        setError(data.message);
+        dispatch(signInFailure(data.message));
         return;
       } else {
-        setError(data.message);
+        dispatch(signInSuccess(data));
         // Consider redirecting to a different page upon successful sign-in
         navigate("/"); // Change "/dashboard" to your desired route
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      setError('An error occurred while processing your request.');
-    } finally {
-      setLoading(false);
-    }
+      dispatch(signInFailure(error.message));
+    } 
   };
 
   return (
@@ -74,7 +70,7 @@ export default function SignIn() {
           </Link>
         </p>
       </div>
-      {err && <p>{err}</p>}
+      {error && <p className='text-red-500'>{error}</p>}
     </div>
   );
 }
