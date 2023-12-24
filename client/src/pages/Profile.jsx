@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { useRef } from 'react';
 import {app} from '../firebase.js';
 import {getDownloadURL, getStorage,ref, uploadBytesResumable} from 'firebase/storage';
-import { updateUserFailure,updateUserStart,updateUserSuccess } from '../redux/userSlice.js';
+import { updateUserFailure,updateUserStart,updateUserSuccess,deleteUserFailure,deleteUserStart,deleteUserSuccess, signOutUserStart, signOutUserSuccess } from '../redux/userSlice.js';
 import { useDispatch } from 'react-redux';
 // service firebase.storage {
 //   match /b/{bucket}/o {
@@ -20,9 +20,9 @@ export default function Profile() {
   const [profile,setProfile]=useState({});
   const [file,setFile]=useState(undefined);
   const [filePerc,setFilePerc]=useState(0);
-  const [photoData,setPhotoData]=useState({});
+  
   const [fileUplaodError,setFileUploadError]=useState(false);
- // const [image, setImage] = useState(null);
+  const [UpdateSuccess, setUpdateSuccess] = useState(false);
   const fileref=useRef(null);
   const dispatch=useDispatch();
   const {loading,error}=useSelector((state)=>state.user);
@@ -93,14 +93,53 @@ export default function Profile() {
       dispatch(updateUserFailure(data.message));
       return;
     }
+    setUpdateSuccess(true);
     dispatch(updateUserSuccess(data));
    } catch (error) {
     dispatch(updateUserFailure(error.message));
    } }
   };
-
-  
-
+   const DeleteAccount=async ()=>{
+          try {
+                dispatch(deleteUserStart());
+          const res=  await fetch(`/api/user/delete/${currentUser.currentUser._id}`,{
+              method:"delete",
+              headers:{
+                "content-type":"application/json"
+              }
+            });
+            const data=await res.json();
+            console.log(data);  
+            if(data.success==false){
+              dispatch(deleteUserFailure(data.message));
+              return;
+            }
+           dispatch(deleteUserSuccess(data));
+          } catch (error) {
+            console.log(error.message);
+            dispatch(deleteUserFailure(error.message));
+          }
+   }
+  const SignOut=async()=>{
+          try {
+            dispatch(signOutUserStart());
+            const res= await fetch(`/api/user/delete/${currentUser.currentUser.id}`,{
+              method:"get",
+              headers:{
+                "content-type":"application/json"
+              }
+            })
+            const data =await res.json()
+            if(data.success==false){
+              dispatch(signOutUserFailure(data.message));
+              return;
+            }
+            dispatch(signOutUserSuccess(data))
+          } catch (error) {
+            console.log(error.message);
+            dispatch(deleteUserFailure(error.message));
+          }
+  }
   return (
     <div className='p-7 max-w-lg mx-auto'>
     <h1 className='text-center my-10 text-3xl font-semibold'>Profile</h1>
@@ -112,14 +151,16 @@ export default function Profile() {
     <input onChange={HandleProfile} type="text" className='p-3 rounded-lg' placeholder='email' defaultValue={currentUser.currentUser.email} id='email'/>
     <input onChange={HandleProfile} type="password" className='p-3 rounded-lg' placeholder='password' id='password'/>
     <button disabled={loading} type='submit' className='p-3 rounded-lg bg-red-500 uppercase text-white font-semibold hover:opacity-80 disabled:opacity-80' >{loading ? "Loading" : "update"}</button>
-    <p>{error && <p className='text-red-500'>{error}</p>}</p>
+
     <button type='button' className='p-3 rounded-lg bg-green-500 uppercase text-white font-semibold hover:opacity-80 disabled:opacity-80' >create Listing</button>
     </form>
     <ul className='my-4 flex justify-between text-red-600'>
-      <li>Delete Account</li>
-      <li>Sign Out</li>
+      <li onClick={DeleteAccount} className='cursor-pointer'>Delete Account</li>
+      <li onClick={SignOut}>Sign Out</li>
     </ul>
     <h1 className='text-center text-green-600'>Show Listing</h1>
+    {error&&<p className='text-red-500'>{error.message}</p>}
+    {UpdateSuccess?<p className='text-green-500'>Update successful</p>:""}
     </div>
   )
 }

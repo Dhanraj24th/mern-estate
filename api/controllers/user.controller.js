@@ -12,8 +12,8 @@ export const deleteUser=async (req,res,next)=>{
    console.log(req.user,req.params,req.body);
    if(req.params.id!=req.user.id) return next(errorHandler(401,"you can delete your own account"));
    try {
-      const deleteUser= await User.findByIdAndDelete(req.param.id);
-      res.status(200).json({message:"User has been deleted",data:deleteUser});
+      await User.findByIdAndDelete(req.param.id);
+      res.status(200).clearCookie('access_token').json({message:"User has been deleted"});
    } catch (error) {
       next(errorHandler(500,error.message));
    }
@@ -39,4 +39,15 @@ export const updateUser= async (req,res,next)=>{
        next(errorHandler(500,"internal server error ..."))
   }   
 
+}
+
+export const signout=(req,res,next)=>{
+         
+      try {
+         if(req.params.id!=req.user.id) return next(errorHandler(401,"you can sign your own account"));
+         res.clearCookie("access_token");
+         res.status(200).json({message:"user has been successfully logout"});
+      } catch (error) {
+         next(errorHandler(500,error.message));
+      }
 }
