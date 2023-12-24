@@ -1,4 +1,6 @@
 import User from "../models/user.model.js";
+import bcryptjs from 'bcryptjs';
+
 import { errorHandler } from "../utils/errorHandler.js";
 
 export const test=(req,res)=>{
@@ -6,9 +8,18 @@ export const test=(req,res)=>{
         message:"hello world",
     });
 }
-
+export const deleteUser=async (req,res,next)=>{
+   console.log(req.user,req.params,req.body);
+   if(req.params.id!=req.user.id) return next(errorHandler(401,"you can delete your own account"));
+   try {
+      const deleteUser= await User.findByIdAndDelete(req.param.id);
+      res.status(200).json({message:"User has been deleted",data:deleteUser});
+   } catch (error) {
+      next(errorHandler(500,error.message));
+   }
+}
 export const updateUser= async (req,res,next)=>{
-    console.log(req.user ,req.params);
+    console.log(req.user ,req.params,req.body);
   if( req.params.id!=req.user.id) return next(errorHandler(401,"you can update your own account"));
   try{
      if(req.body.password){
@@ -24,6 +35,7 @@ export const updateUser= async (req,res,next)=>{
      const {password,...rest}=updatedUser._doc;
      res.status(200).json(rest);
   } catch(error){
+       console.log(error.message);
        next(errorHandler(500,"internal server error ..."))
   }   
 

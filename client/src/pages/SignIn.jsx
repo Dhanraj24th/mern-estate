@@ -15,7 +15,6 @@ const dispatch=useDispatch();
   const submitData = async (e) => {
     e.preventDefault();
       dispatch(signInStart());
-
     try {
       const res = await fetch("/api/auth/signin", {
         method: 'POST',
