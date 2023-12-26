@@ -5,6 +5,7 @@ import {app} from '../firebase.js';
 import {getDownloadURL, getStorage,ref, uploadBytesResumable} from 'firebase/storage';
 import { updateUserFailure,updateUserStart,updateUserSuccess,deleteUserFailure,deleteUserStart,deleteUserSuccess, signOutUserStart, signOutUserSuccess } from '../redux/userSlice.js';
 import { useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
 // service firebase.storage {
 //   match /b/{bucket}/o {
 //     match /{allPaths=**} {
@@ -151,8 +152,9 @@ export default function Profile() {
     <input onChange={HandleProfile} type="text" className='p-3 rounded-lg' placeholder='email' defaultValue={currentUser.currentUser.email} id='email'/>
     <input onChange={HandleProfile} type="password" className='p-3 rounded-lg' placeholder='password' id='password'/>
     <button disabled={loading} type='submit' className='p-3 rounded-lg bg-red-500 uppercase text-white font-semibold hover:opacity-80 disabled:opacity-80' >{loading ? "Loading" : "update"}</button>
-
-    <button type='button' className='p-3 rounded-lg bg-green-500 uppercase text-white font-semibold hover:opacity-80 disabled:opacity-80' >create Listing</button>
+     <Link to={'/create-listing'} className='p-3 rounded-lg bg-green-500 uppercase text-white font-semibold hover:opacity-80 disabled:opacity-80 text-center'>
+    <button type='button'  >Create Listing</button>
+    </Link>
     </form>
     <ul className='my-4 flex justify-between text-red-600'>
       <li onClick={DeleteAccount} className='cursor-pointer'>Delete Account</li>
