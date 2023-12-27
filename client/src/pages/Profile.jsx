@@ -21,14 +21,16 @@ export default function Profile() {
   const [profile,setProfile]=useState({});
   const [file,setFile]=useState(undefined);
   const [filePerc,setFilePerc]=useState(0);
-  
+  const targetRef=useRef(null);
   const [fileUplaodError,setFileUploadError]=useState(false);
   const [UpdateSuccess, setUpdateSuccess] = useState(false);
   const fileref=useRef(null);
   const dispatch=useDispatch();
   const {loading,error}=useSelector((state)=>state.user);
   const currentUser=useSelector(state=>state.user);
-  let pdata;
+  const [listData,setListData]=useState([]);
+  const [listLoading,setListLoading]=useState(false);
+  const [listLoadingError,setListLoadingError]=useState(false);
   useEffect(()=>{
     
      // handleFileUpload(file);
@@ -141,6 +143,41 @@ export default function Profile() {
             dispatch(deleteUserFailure(error.message));
           }
   }
+  console.log(listData)
+  const HandleListing=async (e)=>{
+      e.preventDefault();
+      
+      setListLoading(true);
+      try {
+        const res=await fetch(`/api/listing/list/${currentUser.currentUser._id}`,{
+          headers:{
+            "content-type":"application/json"
+          },
+          method:'get',
+        })
+      const data= await res.json();
+      if(data.success==false){
+        setListLoading(false);
+        setListLoadingError(data.message);
+      }
+      
+      console.log(data);
+     const timeout= setTimeout(() => {
+        handleScroll();
+      }, 1000);
+      setListLoading(false);
+      setListData(data);
+      } catch (error) {
+        setListLoading(false);
+        setListLoadingError(error.message);
+      }
+  }
+  const handleScroll = () => {
+    console.log("scroller")
+    if (targetRef.current) {
+      targetRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
   return (
     <div className='p-7 max-w-lg mx-auto'>
     <h1 className='text-center my-10 text-3xl font-semibold'>Profile</h1>
@@ -160,9 +197,26 @@ export default function Profile() {
       <li onClick={DeleteAccount} className='cursor-pointer'>Delete Account</li>
       <li onClick={SignOut}>Sign Out</li>
     </ul>
-    <h1 className='text-center text-green-600'>Show Listing</h1>
+    {listData.length<1&&<button onClick={(e)=>{HandleListing(e);}}  className='text-center justify-center text-green-600'>Show Listing</button>}
     {error&&<p className='text-red-500'>{error.message}</p>}
     {UpdateSuccess?<p className='text-green-500'>Update successful</p>:""}
+    {listData&& listData.length > 1 &&
+  <div ref={targetRef} className='flex flex-col gap-5 mt-4'>{
+    listData.map((listing, key) => (
+      <div key={key + listing._id} className='flex flex-row items-center border border-solid border-slate-300 rounded p-2'>
+        <div className='flex mr-auto items-center '>
+          <img src={listing.imageUrls[0]} className='w-20 h-12 object-contain' />
+          <p className='ml-2 font-semibold font-sans'>{listing.name}</p>
+        </div>
+        <div className='flex flex-col items-center'>
+          <button className='text-red-500 uppercase'>delete</button>
+          <button className='text-green-500 uppercase'>edit</button>
+        </div>
+      </div>
+    ))}
+  </div>
+}
+     
     </div>
   )
 }
