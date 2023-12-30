@@ -7,5 +7,5 @@ const router=express.Router();
 router.get('/test',test);
 router.post('/update/:id',verifyToken,updateUser);
 router.delete('/delete/:id',verifyToken,deleteUser);
-router.get('/sign/:id',verifyToken,signout);
+router.get('/signout/:id',verifyToken,signout);
 export default router;

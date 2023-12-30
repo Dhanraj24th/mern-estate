@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { useRef } from 'react';
 import {app} from '../firebase.js';
 import {getDownloadURL, getStorage,ref, uploadBytesResumable} from 'firebase/storage';
-import { updateUserFailure,updateUserStart,updateUserSuccess,deleteUserFailure,deleteUserStart,deleteUserSuccess, signOutUserStart, signOutUserSuccess } from '../redux/userSlice.js';
+import { updateUserFailure,updateUserStart,updateUserSuccess,deleteUserFailure,deleteUserStart,deleteUserSuccess, signOutUserStart, signOutUserSuccess,signOutUserFailure } from '../redux/userSlice.js';
 import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 // service firebase.storage {
@@ -124,9 +124,10 @@ export default function Profile() {
           }
    }
   const SignOut=async()=>{
-          try {
-            dispatch(signOutUserStart());
-            const res= await fetch(`/api/user/delete/${currentUser.currentUser.id}`,{
+    console.log("signout")
+           try {
+           dispatch(signOutUserStart());
+           const res= await fetch(`/api/user/signout/${currentUser.currentUser._id}`,{
               method:"get",
               headers:{
                 "content-type":"application/json"
@@ -149,7 +150,7 @@ export default function Profile() {
       
       setListLoading(true);
       try {
-        const res=await fetch(`/api/listing/list/${currentUser.currentUser._id}`,{
+        const res=await fetch(`/api/listing/read/${currentUser.currentUser._id}`,{
           headers:{
             "content-type":"application/json"
           },
@@ -159,6 +160,7 @@ export default function Profile() {
       if(data.success==false){
         setListLoading(false);
         setListLoadingError(data.message);
+        return;
       }
       
       console.log(data);
@@ -178,6 +180,29 @@ export default function Profile() {
       targetRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
+  const HandleListDelete=async (id,userRef)=>{
+    console.log(id,userRef);
+    try {
+      const res=await fetch(`/api/listing/delete/${id}`,{headers: { 'content-type':"application/json"},
+    body:JSON.stringify({userid:userRef}),
+    method:"delete"
+    }
+    );
+    const data=await res.json();
+    if(data.success==false){
+      console.log(data.message);
+      return
+    }
+    console.log(data);
+    const filterdata=listData.filter((list)=>list._id!=id);
+    setListData(filterdata);
+    } catch (error) {
+      console.log(error);
+    }
+    
+  }
+
+
   return (
     <div className='p-7 max-w-lg mx-auto'>
     <h1 className='text-center my-10 text-3xl font-semibold'>Profile</h1>
@@ -195,13 +220,16 @@ export default function Profile() {
     </form>
     <ul className='my-4 flex justify-between text-red-600'>
       <li onClick={DeleteAccount} className='cursor-pointer'>Delete Account</li>
-      <li onClick={SignOut}>Sign Out</li>
+      <li onClick={SignOut} className='cursor-pointer'>Sign Out</li>
     </ul>
     {listData.length<1&&<button onClick={(e)=>{HandleListing(e);}}  className='text-center justify-center text-green-600'>Show Listing</button>}
     {error&&<p className='text-red-500'>{error.message}</p>}
     {UpdateSuccess?<p className='text-green-500'>Update successful</p>:""}
-    {listData&& listData.length > 1 &&
-  <div ref={targetRef} className='flex flex-col gap-5 mt-4'>{
+    {listData&& listData.length > 0 &&
+<div ref={targetRef} className='flex flex-col gap-5 mt-4'>
+  <p className='text-center font-semibold text-2xl'>Your Listings</p>
+  {
+     
     listData.map((listing, key) => (
       <div key={key + listing._id} className='flex flex-row items-center border border-solid border-slate-300 rounded p-2'>
         <div className='flex mr-auto items-center '>
@@ -209,7 +237,7 @@ export default function Profile() {
           <p className='ml-2 font-semibold font-sans'>{listing.name}</p>
         </div>
         <div className='flex flex-col items-center'>
-          <button className='text-red-500 uppercase'>delete</button>
+          <button className='text-red-500 uppercase' onClick={()=>{HandleListDelete(listing._id,listing.userRef)}}>delete</button>
           <button className='text-green-500 uppercase'>edit</button>
         </div>
       </div>
