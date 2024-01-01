@@ -6,6 +6,7 @@ import {getDownloadURL, getStorage,ref, uploadBytesResumable} from 'firebase/sto
 import { updateUserFailure,updateUserStart,updateUserSuccess,deleteUserFailure,deleteUserStart,deleteUserSuccess, signOutUserStart, signOutUserSuccess,signOutUserFailure } from '../redux/userSlice.js';
 import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 // service firebase.storage {
 //   match /b/{bucket}/o {
 //     match /{allPaths=**} {
@@ -18,6 +19,7 @@ import { Link } from 'react-router-dom';
 //   }
 // }
 export default function Profile() {
+  const navigate=useNavigate();
   const [profile,setProfile]=useState({});
   const [file,setFile]=useState(undefined);
   const [filePerc,setFilePerc]=useState(0);
@@ -202,6 +204,11 @@ export default function Profile() {
     
   }
 
+  const HandleEdit=(listing)=>{
+    console.log(listing);
+    navigate(`/update-listing/${encodeURIComponent(listing._id)}`,{state:{data:listing}});
+  }
+
 
   return (
     <div className='p-7 max-w-lg mx-auto'>
@@ -234,11 +241,11 @@ export default function Profile() {
       <div key={key + listing._id} className='flex flex-row items-center border border-solid border-slate-300 rounded p-2'>
         <div className='flex mr-auto items-center '>
           <img src={listing.imageUrls[0]} className='w-20 h-12 object-contain' />
-          <p className='ml-2 font-semibold font-sans'>{listing.name}</p>
+         <Link to={`/list/${listing._id}`}><p className='ml-2 font-semibold font-sans'>{listing.name}</p></Link> 
         </div>
         <div className='flex flex-col items-center'>
           <button className='text-red-500 uppercase' onClick={()=>{HandleListDelete(listing._id,listing.userRef)}}>delete</button>
-          <button className='text-green-500 uppercase'>edit</button>
+          <button className='text-green-500 uppercase' onClick={()=>{HandleEdit(listing)}}>edit</button>
         </div>
       </div>
     ))}

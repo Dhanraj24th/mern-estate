@@ -17,7 +17,7 @@ export const getListing=async (req,res,next)=>{
                 const listing=await Listing.find({userRef:req.params.id});
                 if(listing.length==0) return next(errorHandler(404,"user not found"));
                 return res.status(200).json(listing);
-            } catch (error) {
+            } catch (error) { 
                 next(error);
             }
 }
@@ -43,16 +43,29 @@ export const deleteList=async(req,res,next)=>{
             }
 }
 export const updatelist=async (req,res,next)=>{
-       if(req.body.UserRef!=req.user.id){
-        return next(errorHandler(401,"user can delete his own listing"));
+       if(req.body.userRef!=req.user.id){
+        return next(errorHandler(401,"user can update his own listing"));
        }
+        const listing= await Listing.findById(req.params.id);
+        console.log(listing);
+       if(!listing){return next(errorHandler(404,"lsit can not find"));} 
        try {
-        Listing.findByIdAndUpdate(req.params.id,{
-            $Set{
-                
-            }
-        })
+        const updatedList = await Listing.findByIdAndUpdate(req.params.id,req.body
+            ,{new :true});
+         res.status(200).json(updatedList);
        } catch (error) {
-        
+          next(error);
+       }
+
+}
+export const getList=async (req,res,next)=>{
+    try {  
+    const listing=await Listing.findById(req.params.id);
+       if(!listing){
+        return next(errorHandler(404,"list not found"));
+       }
+         res.status(200).json(listing);
+       } catch (error) {
+           next(error);
        }
 }

@@ -2,31 +2,24 @@ import React from 'react'
 import { useState } from 'react';
 import {getDownloadURL, getStorage,ref, uploadBytesResumable} from 'firebase/storage';
 import {app} from '../firebase.js';
-import {useSelector} from 'react-redux';
-import  {useNavigate} from'react-router-dom';
-export default function CreateListing() {
-                const navigate=  useNavigate();
-  const {currentUser}=useSelector(state =>state.user);
+import { useEffect } from 'react';
+
+import { useLocation } from 'react-router-dom';
+export default function UpdateListing() {
+  const location=useLocation();
+  const recevied= location.state?.data;
   const [files,setFiles]=useState([]);
   const [uploading,setUploading]=useState(false);
-  const [formData,setFormData]=useState({
-    imageUrls:[],
-    name:'',
-    description:'',
-    address:'',
-    type:'rent',
-    bedrooms:1,
-    bathrooms:1,
-    regularPrice:100,
-    discountedPrice:0,
-    offer:true,
-    parking:false,
-    furnished:false,
-  });
+  const [formData,setFormData]=useState({});
   const [loading,setloading]=useState(false);
   const [listError,setListError]=useState(" ");
   console.log(formData);
   const[imageUploadError,setImageUplaodError]=useState(true);
+  
+  useEffect(()=>{
+    setFormData(recevied); 
+    setImage(recevied.imageUrls);           
+  },[])
   const HandleSubmitList=async (e) =>{
           e.preventDefault();
           if(formData.imageUrls.length<1 ){
@@ -39,12 +32,12 @@ export default function CreateListing() {
           }
           setloading(true);
           try {
-            const res=await fetch("api/listing/create",{
-              method:'post',
+            const res=await fetch(`/api/listing/update/${formData._id}`,{
+              method:'put',
               headers:{
                 'content-type':'application/json'
               },
-              body:JSON.stringify({...formData,userRef:currentUser._id})
+              body:JSON.stringify(formData)
             })
             const data =await res.json();
             setloading(false);
@@ -56,7 +49,7 @@ export default function CreateListing() {
            
             setloading(false);
             setListError(false);
-            navigate(`/listing/${data._id}`);
+           // navigate(`/listing/${data._id}`);
           } catch (error) {
             setloading(false);
               setListError(error.message);
@@ -175,7 +168,6 @@ export default function CreateListing() {
  const deleteImage=(name,e)=>{
   e.preventDefault();
     console.log(name);
-   // setFiles(newfiles);
    const disfiles={...files};
    console.log(disfiles);
    for (const key in files) {
@@ -205,7 +197,7 @@ export default function CreateListing() {
  console.log(formData)
   return (
     <main className='max-w-4xl mx-auto'>
-        <h1 className='text-center font-semibold text-3xl p-3 my-4'>Create a Listing</h1>
+        <h1 className='text-center font-semibold text-3xl p-3 my-4'>Update Listing</h1>
         <form onSubmit={HandleSubmitList} className='flex flex-col sm:flex-row my-8 gap-8'>
               <div className='flex flex-col gap-4 flex-1'>
             
@@ -243,8 +235,8 @@ export default function CreateListing() {
                       {image&&(
   <div className='flex flex-wrap max-w-full gap-5 justify-evenly items-center'>
   {image.map((obj, i) => (
-    <div key={obj.name}>
-      <img src={obj.url} key={obj.url} className="w-40 h-28 rounded-lg" alt={`photo ${i}`} />
+    <div key={obj.name||obj}>
+      <img src={obj.url||obj} key={obj.url||obj} className="w-40 h-28 rounded-lg" alt={`photo ${i}`} />
       <button type='button' disabled={loading} className='p-1 mt-2 bg-slate-600 text-center w-full rounded-lg disabled:opacity-90' onClick={(e) => deleteImage(obj.name,e)}>
         delete
       </button>
@@ -253,8 +245,8 @@ export default function CreateListing() {
 </div>
 )}
 
-<button type='submit' disabled={loading} className='p-3 bg-slate-500 rounded-lg disabled:opacity-80 hover:opacity-90'>{loading?"Creating....":"Create Listing"}</button>
-  {listError?<p className='text-red-600 text-center' >{listError}</p>:<p className='text-center text-green-800'>"sucessfully updated"</p>}
+<button type='submit' disabled={loading} className='p-3 bg-slate-500 rounded-lg disabled:opacity-80 hover:opacity-90'>{loading?"Creating....":"Update Listing"}</button>
+  {listError?<p className='text-red-600 text-center' >{listError}</p>:<p className='text-center text-green-800'>"sucessfully created"</p>}
                </div>                     
    </form>
       
